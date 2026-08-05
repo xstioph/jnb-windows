@@ -236,7 +236,7 @@ struct {
 int pogostick, bunnies_in_space, jetpack, lord_of_the_flies, blood_is_thicker_than_water;
 
 
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) && !defined(_WIN32)
 int filelength(int handle)
 {
 	struct stat buf;
