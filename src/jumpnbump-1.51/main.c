@@ -87,7 +87,21 @@ unsigned int ban_map[17][22] = {
 	{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 };
 
-#define GET_BAN_MAP_XY(x,y) ban_map[(y) >> 4][(x) >> 4]
+#define BAN_MAP_HEIGHT 17
+#define BAN_MAP_WIDTH 22
+#define BAN_TILE_SIZE 16
+
+static unsigned int get_ban_map_xy(int x, int y)
+{
+	/* Players may legitimately travel above the visible level. */
+	if (x < 0 || x >= BAN_MAP_WIDTH * BAN_TILE_SIZE ||
+	    y < 0 || y >= BAN_MAP_HEIGHT * BAN_TILE_SIZE)
+		return BAN_VOID;
+
+	return ban_map[y / BAN_TILE_SIZE][x / BAN_TILE_SIZE];
+}
+
+#define GET_BAN_MAP_XY(x,y) get_ban_map_xy((x), (y))
 
 struct {
 	int num_frames;
@@ -3012,6 +3026,8 @@ int init_program(int argc, char *argv[], char *pal)
 		for (c1 = 1; c1 < argc; c1++) {
 			if (stricmp(argv[c1], "-nosound") == 0)
 				main_info.no_sound = 1;
+			else if (stricmp(argv[c1], "-nomusic") == 0)
+				main_info.no_music = 1;
 			else if (stricmp(argv[c1], "-musicnosound") == 0)
 				main_info.music_no_sound = 1;
 			else if (stricmp(argv[c1], "-nogore") == 0)
@@ -3088,6 +3104,7 @@ int init_program(int argc, char *argv[], char *pal)
 				printf("  -fireworks               screensaver mode\n");
 				printf("  -fullscreen              run in fullscreen mode\n");
 				printf("  -nosound                 play without sound\n");
+				printf("  -nomusic                 play with sound effects but without music\n");
 				printf("  -nogore                  play without blood\n");
 				printf("  -noflies                 disable flies\n");
 				printf("  -mirror                  play with mirrored level\n");
