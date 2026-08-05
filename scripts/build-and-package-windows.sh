@@ -36,6 +36,12 @@ cp "$source_root/AUTHORS" "$dist_root/licenses/game/AUTHORS"
 cp "$source_root/source.txt" "$dist_root/licenses/game/source.txt"
 cp "$repo_root/SOURCE.md" "$dist_root/licenses/game/SOURCE.md"
 
+# SDL_mixer loads its MOD decoder at runtime, so ldd does not report it as a
+# direct dependency. Jump 'n Bump's music is stored in MOD files.
+mikmod_runtime="$(find /mingw64/bin -maxdepth 1 -type f -iname 'libmikmod*.dll' -print -quit)"
+[[ -n "$mikmod_runtime" ]] || fail "SDL_mixer's MOD music decoder (libmikmod) was not found."
+cp "$mikmod_runtime" "$dist_root/"
+
 for pass in 1 2 3 4 5; do
     while IFS= read -r binary; do
         while IFS= read -r dependency; do
@@ -60,9 +66,11 @@ JUMP 'N BUMP 1.51 FOR WINDOWS - FIRST TEST BUILD
 
 Double-click JumpNBump-Launcher.cmd, choose a level, and press Play.
 Put additional .dat files in the levels folder and press Refresh.
+The launcher remembers fullscreen, mirror, gore, flies, and sound choices.
 
 This package uses the original standalone 1.51 game loop. The separate launcher
-only selects a .dat file and starts jumpnbump.exe with the existing -dat option.
+selects a .dat file and starts jumpnbump.exe with command-line options. The new
+-nomusic option changes only the SDL music boundary and leaves effects enabled.
 
 Source provenance and licenses are in the licenses folder.
 EOF
@@ -78,6 +86,7 @@ require_runtime() {
 require_runtime 'SDL.dll' 'SDL'
 require_runtime '*SDL_mixer*.dll' 'SDL_mixer'
 require_runtime '*SDL_net*.dll' 'SDL_net'
+require_runtime 'libmikmod*.dll' 'SDL_mixer MOD music decoder'
 
 echo "Packaged runtime DLLs:"
 find "$dist_root" -maxdepth 1 -type f -iname '*.dll' -printf '  %f\n' | sort
