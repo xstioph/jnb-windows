@@ -1,0 +1,64 @@
+name: Windows build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows-x64:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install MinGW and SDL compatibility dependencies
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            make
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-sdl12-compat
+            mingw-w64-x86_64-SDL_mixer
+            mingw-w64-x86_64-SDL_net
+            mingw-w64-x86_64-bzip2
+            mingw-w64-x86_64-zlib
+
+      - name: Ensure build script is executable
+        run: |
+          chmod +x ./scripts/build-and-package-windows.sh
+
+      - name: Build and prepare portable directory
+        run: ./scripts/build-and-package-windows.sh
+
+      - name: Create portable zip
+        shell: pwsh
+        run: |
+          if (-Not (Test-Path -Path 'dist/jnb-windows-x64')) {
+            Write-Error 'dist/jnb-windows-x64 does not exist — build may have failed.'
+            exit 1
+          }
+          Compress-Archive `
+            -Path 'dist/jnb-windows-x64/*' `
+            -DestinationPath 'dist/jnb-windows-x64.zip' `
+            -Force
+
+      - name: Upload portable build
+        uses: actions/upload-artifact@v4
+        with:
+          name: jnb-windows-x64
+          path: dist/jnb-windows-x64.zip
+          if-no-files-found: error
+          retention-days: 14
