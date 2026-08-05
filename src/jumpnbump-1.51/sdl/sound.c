@@ -471,7 +471,7 @@ char dj_ready_mod(char mod_num)
 	unsigned char *fp;
 	int len;
 
-	if (main_info.no_sound)
+	if (main_info.no_music || main_info.no_sound)
 		return 0;
 
 	switch (mod_num) {
@@ -528,7 +528,7 @@ char dj_ready_mod(char mod_num)
 char dj_start_mod(void)
 {
 #ifndef NO_SDL_MIXER
-	if (main_info.no_sound)
+	if (main_info.no_music || main_info.no_sound)
 		return 0;
 
 	Mix_VolumeMusic(0);
@@ -541,7 +541,7 @@ char dj_start_mod(void)
 void dj_stop_mod(void)
 {
 #ifndef NO_SDL_MIXER
-	if (main_info.no_sound)
+	if (main_info.no_music || main_info.no_sound)
 		return;
 
 	Mix_HaltMusic();
@@ -551,7 +551,7 @@ void dj_stop_mod(void)
 void dj_set_mod_volume(char volume)
 {
 #ifndef NO_SDL_MIXER
-	if (main_info.no_sound)
+	if (main_info.no_music || main_info.no_sound)
 		return;
 
 	Mix_VolumeMusic(volume);
