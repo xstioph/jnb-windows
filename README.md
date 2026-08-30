@@ -33,7 +33,6 @@ Place additional `.dat` levels in `levels`, then double-click
 - Preserve the original gameplay and frame loop.
 - Build the original SDL 1.2 code through `sdl12-compat`.
 - Keep level discovery and process launching outside the game.
-- Do not add two-button mouse support.
 - Treat modern gamepad remapping as a later, separately testable change.
 
 See `SOURCE.md` for provenance and `LEVEL-LAUNCHER-PLAN.md` for the launcher
