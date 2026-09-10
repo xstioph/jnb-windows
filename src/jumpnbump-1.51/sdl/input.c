@@ -28,11 +28,74 @@
 static int num_joys=0;
 static SDL_Joystick *joys[4];
 
-/* assumes joysticks have at least one button, could check numbuttons first? */
-#define JOY_LEFT(num) (num_joys>num && SDL_JoystickGetAxis(joys[num], 0)<-3200)
-#define JOY_RIGHT(num) (num_joys>num && SDL_JoystickGetAxis(joys[num], 0)>3200)
-/* I find using the vertical axis to be annoying -- dnb */
-#define JOY_JUMP(num) (num_joys>num && SDL_JoystickGetButton(joys[num], 0))
+#define JOY_DEAD_ZONE ((32767 * 12) / 100)
+#define JOY_FACE_BUTTONS 4
+
+static int joy_available(int num)
+{
+	return num >= 0 && num < num_joys && num < 4 && joys[num] != NULL;
+}
+
+static int joy_hat_pressed(int num, Uint8 direction)
+{
+	Uint8 hat;
+
+	if (!joy_available(num) || SDL_JoystickNumHats(joys[num]) < 1)
+		return 0;
+
+	hat = SDL_JoystickGetHat(joys[num], 0);
+	return (hat & direction) != 0;
+}
+
+static int joy_left(int num)
+{
+	int axis_left = 0;
+
+	if (!joy_available(num))
+		return 0;
+
+	if (SDL_JoystickNumAxes(joys[num]) > 0)
+		axis_left = SDL_JoystickGetAxis(joys[num], 0) < -JOY_DEAD_ZONE;
+
+	return axis_left || joy_hat_pressed(num, SDL_HAT_LEFT);
+}
+
+static int joy_right(int num)
+{
+	int axis_right = 0;
+
+	if (!joy_available(num))
+		return 0;
+
+	if (SDL_JoystickNumAxes(joys[num]) > 0)
+		axis_right = SDL_JoystickGetAxis(joys[num], 0) > JOY_DEAD_ZONE;
+
+	return axis_right || joy_hat_pressed(num, SDL_HAT_RIGHT);
+}
+
+static int joy_jump(int num)
+{
+	int button;
+	int button_count;
+
+	if (!joy_available(num))
+		return 0;
+
+	button_count = SDL_JoystickNumButtons(joys[num]);
+	if (button_count > JOY_FACE_BUTTONS)
+		button_count = JOY_FACE_BUTTONS;
+
+	for (button = 0; button < button_count; button++) {
+		if (SDL_JoystickGetButton(joys[num], button))
+			return 1;
+	}
+
+	return 0;
+}
+
+#define JOY_LEFT(num) joy_left(num)
+#define JOY_RIGHT(num) joy_right(num)
+#define JOY_JUMP(num) joy_jump(num)
 
 int calib_joy(int type)
 {
