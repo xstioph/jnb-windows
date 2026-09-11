@@ -295,6 +295,7 @@ void write_calib_data(void);
 
 void update_player_actions(void);
 void init_inputs(void);
+int joy_start_pressed(void);
 int calib_joy(int type);
 
 /* menu.c */
