@@ -30,6 +30,7 @@ static SDL_Joystick *joys[4];
 
 #define JOY_DEAD_ZONE ((32767 * 12) / 100)
 #define JOY_FACE_BUTTONS 4
+#define JOY_START_BUTTON 7
 
 static int joy_available(int num)
 {
@@ -87,6 +88,20 @@ static int joy_jump(int num)
 
 	for (button = 0; button < button_count; button++) {
 		if (SDL_JoystickGetButton(joys[num], button))
+			return 1;
+	}
+
+	return 0;
+}
+
+int joy_start_pressed(void)
+{
+	int num;
+
+	for (num = 0; num < num_joys && num < 4; num++) {
+		if (joy_available(num) &&
+		    SDL_JoystickNumButtons(joys[num]) > JOY_START_BUTTON &&
+		    SDL_JoystickGetButton(joys[num], JOY_START_BUTTON))
 			return 1;
 	}
 
