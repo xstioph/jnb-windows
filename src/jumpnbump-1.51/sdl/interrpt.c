@@ -42,6 +42,41 @@ char local_keyb[256];
 char keyb[256];
 char last_keys[50];
 
+static int keyboard_escape_pressed;
+static int controller_escape_pressed;
+static int controller_escape_armed;
+static int posted_escape_pressed;
+
+static void update_escape_key(void)
+{
+	int pressed = keyboard_escape_pressed || controller_escape_pressed;
+
+	if (pressed == posted_escape_pressed)
+		return;
+
+	if (pressed)
+		addkey(1 & 0x7f);
+	else
+		addkey(1 | 0x8000);
+	posted_escape_pressed = pressed;
+}
+
+static void update_controller_escape(void)
+{
+	int pressed = joy_start_pressed();
+
+	/* START may also have launched the game. Require a release before the
+	 * in-game binding becomes active, so one press cannot both launch and exit. */
+	if (!controller_escape_armed) {
+		if (!pressed)
+			controller_escape_armed = 1;
+		controller_escape_pressed = 0;
+	} else {
+		controller_escape_pressed = pressed;
+	}
+	update_escape_key();
+}
+
 #ifdef USE_KAILLERA
 
 /* information about the party in this session */
@@ -405,10 +440,8 @@ int intr_sysupdate()
 				addkey((KEY_PL4_JUMP & 0x7f) | 0x8000);
 				break;
 			case SDLK_ESCAPE:
-				if (e.type == SDL_KEYUP)
-					addkey(1 | 0x8000);
-				else
-					addkey(1 & 0x7f);
+				keyboard_escape_pressed = e.type == SDL_KEYDOWN;
+				update_escape_key();
 				break;
 			default:
 				e.key.keysym.sym &= 0x7f;
@@ -424,6 +457,8 @@ int intr_sysupdate()
 		}
 		i++;
 	}
+
+	update_controller_escape();
 
 	SDL_Delay(1);
 	now = SDL_GetTicks();
